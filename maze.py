@@ -93,6 +93,39 @@ class Maze:
             # Recursively visit the next cell
             self._break_walls_r(new_col, new_row)
 
+    def _solve_r(self, col, row):
+        self._animate()
+        self._cells[col][row].visited = True
+
+        if col == self._num_cols - 1 and row == self._num_rows - 1:
+            return True
+
+        directions = [
+            (-1, 0, "left", lambda c, r: not self._cells[c][r].has_left_wall),
+            (1, 0, "right", lambda c, r: not self._cells[c][r].has_right_wall),
+            (0, -1, "up", lambda c, r: not self._cells[c][r].has_top_wall),
+            (0, 1, "down", lambda c, r: not self._cells[c][r].has_bottom_wall),
+        ]
+
+        for dx, dy, _, wall_check in directions:
+            new_col, new_row = col + dx, row + dy
+            if (
+                0 <= new_col < self._num_cols
+                and 0 <= new_row < self._num_rows
+                and not self._cells[new_col][new_row].visited
+                and wall_check(col, row)
+            ):
+                self._cells[col][row].draw_move(self._cells[new_col][new_row])
+                if self._solve_r(new_col, new_row):
+                    return True
+                self._cells[col][row].draw_move(self._cells[new_col][new_row], True)
+
+        return False
+
+    # create the moves for the solution using a depth first search
+    def solve(self):
+        return self._solve_r(0, 0)
+
     def _reset_cells_visited(self):
         for col in self._cells:
             for cell in col:
